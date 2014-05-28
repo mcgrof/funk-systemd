@@ -1,0 +1,11 @@
+[Unit]
+Description=Funky daemon
+Requires=funk.socket
+
+[Service]
+Type=notify
+ExecStart=@BINDIR@/funk_dynamic
+
+[Install]
+WantedBy=multi-user.target
+Also=funk.socket

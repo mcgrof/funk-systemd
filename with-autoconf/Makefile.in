@@ -1,0 +1,107 @@
+include $(CURDIR)/Config.mk
+
+CFLAGS += -I$(CURDIR)/
+SHARED_OBJS = funk_shared.o funk_legacy.o
+
+.PHONY: all
+all: funk_regular funk_dynamic funk_math
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(CFLAGS_$*.o) -c -o $@ $< $(APPEND_CFLAGS)
+
+# Simple dynamic link loader example
+funk_math: funk_math.o
+	$(CC) $(CFLAGS) -Wall -rdynamic -ldl $^ -o $@
+
+# Systemd library using the dynamic link loader, works on any system
+funk_dynamic: $(SHARED_OBJS) funk_dynamic.o funk_dynamic_helpers.o funk_shared_active.o
+	$(CC) $(CFLAGS) -Wall -rdynamic -ldl $^ -o $@
+
+# A binary without the dynamic linker requires a bit more overhead on
+# the config side, without systemd you can't run the binary
+ifeq ($(CONFIG_SYSTEMD),y)
+SHARED_OBJS += funk_shared_active.o
+endif
+
+CFLAGS  += $(SYSTEMD_CFLAGS)
+LDFLAGS += $(SYSTEMD_LIBS)
+
+funk_regular: $(SHARED_OBJS) funk_regular.o funk_regular_helpers.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -Wall -o $@
+
+.PHONY: reload
+reload:
+	systemctl daemon-reload
+
+.PHONY: install-sockets
+install-sockets:
+	cp units/*.socket @SYSTEMD_DIR@
+
+
+.PHONY: install-reg
+install-reg: funk_regular
+	cp funk_regular @BINDIR@
+	cp units/funk_regular.service @SYSTEMD_DIR@/funk.service
+	make install-sockets
+	make reload
+	make enable
+
+.PHONY: install-dyn
+install-dyn:
+	cp funk_dynamic @BINDIR@
+	cp units/funk_dynamic.service @SYSTEMD_DIR@/funk.service
+	make install-sockets
+	make reload
+	make enable
+
+.PHONY: install
+install:
+	make install-sockets
+	@echo
+	@echo You must run either of:
+	@echo
+	@echo    make install-reg
+	@echo    make install-dyn
+	@echo
+	@echo Since you didn't specify we'll run make install-dyn
+	make install-dyn
+
+.PHONY: clean
+clean:
+	rm -f funk_dynamic funk_regular funk_math *.o
+
+.PHONY: maintainer-clean
+maintainer-clean:
+	-make clean
+	-rm -f autom4te.cache configure config.status config.log \
+		config.h config.h.in config.h.in~ stamp-h1 \
+		build-aux Makefile Config.mk \
+		units/*.service units/*.socket
+
+dist-clean:
+	-make maintainer-clean
+
+
+.PHONY: start
+start:
+	-systemctl start funk.socket
+	-systemctl start funk.service
+	-systemctl status funk.socket
+	-systemctl status funk.service
+
+.PHONY: stop
+stop:
+	-systemctl stop funk.service
+	-systemctl stop funk.socket
+	-systemctl status funk.socket
+	-systemctl status funk.service
+
+.PHONY: restart
+restart:
+	@-make stop
+	@-make start
+
+.PHONY: enable
+enable:
+	systemctl enable funk.service
+	systemctl enable funk.socket

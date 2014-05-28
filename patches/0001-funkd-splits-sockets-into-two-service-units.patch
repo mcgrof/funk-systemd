@@ -1,0 +1,204 @@
+From 15ae873da76d2d085314a61555061ce30395cef1 Mon Sep 17 00:00:00 2001
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Tue, 27 May 2014 16:53:15 -0700
+Subject: [PATCH] funkd: splits sockets into two service units
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ units/funk.socket.in          |  8 --------
+ units/funk_dynamic.service.in |  4 ++--
+ units/funk_regular.service.in |  4 ++--
+ units/funk_ro.socket.in       |  7 +++++++
+ units/funk_rw.socket.in       |  7 +++++++
+ with-autoconf/Makefile.in     | 15 ++++++++++-----
+ with-autoconf/configure.ac    |  3 ++-
+ with-automake/Makefile.am     | 12 ++++++++----
+ with-automake/configure.ac    |  3 ++-
+ 9 files changed, 40 insertions(+), 23 deletions(-)
+ delete mode 100644 units/funk.socket.in
+ create mode 100644 units/funk_ro.socket.in
+ create mode 100644 units/funk_rw.socket.in
+
+diff --git a/units/funk.socket.in b/units/funk.socket.in
+deleted file mode 100644
+index 278d76b..0000000
+--- a/units/funk.socket.in
++++ /dev/null
+@@ -1,8 +0,0 @@
+-[Socket]
+-ListenStream=@RUNDIR@/funk/socket
+-ListenStream=@RUNDIR@/funk/socket_ro
+-SocketMode=0600
+-Service=funk.service
+-
+-[Install]
+-WantedBy=sockets.target
+diff --git a/units/funk_dynamic.service.in b/units/funk_dynamic.service.in
+index 737c2b6..c827ac7 100644
+--- a/units/funk_dynamic.service.in
++++ b/units/funk_dynamic.service.in
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Funky daemon
+-Requires=funk.socket
++Requires=funk_rw.socket funk_ro.socket
+ 
+ [Service]
+ Type=notify
+@@ -8,4 +8,4 @@ ExecStart=@BINDIR@/funk_dynamic
+ 
+ [Install]
+ WantedBy=multi-user.target
+-Also=funk.socket
++Also=funk_rw.socket funk_ro.socket
+diff --git a/units/funk_regular.service.in b/units/funk_regular.service.in
+index 040fce8..2902a30 100644
+--- a/units/funk_regular.service.in
++++ b/units/funk_regular.service.in
+@@ -1,6 +1,6 @@
+ [Unit]
+ Description=Funky daemon
+-Requires=funk.socket
++Requires=funk_rw.socket funk_ro.socket
+ 
+ [Service]
+ Type=notify
+@@ -8,4 +8,4 @@ ExecStart=@BINDIR@/funk_regular
+ 
+ [Install]
+ WantedBy=multi-user.target
+-Also=funk.socket
++Also=funk_rw.socket funk_ro.socket
+diff --git a/units/funk_ro.socket.in b/units/funk_ro.socket.in
+new file mode 100644
+index 0000000..a29885d
+--- /dev/null
++++ b/units/funk_ro.socket.in
+@@ -0,0 +1,7 @@
++[Socket]
++ListenStream=@RUNDIR@/funk/socket_ro
++SocketMode=0400
++Service=funk.service
++
++[Install]
++WantedBy=sockets.target
+diff --git a/units/funk_rw.socket.in b/units/funk_rw.socket.in
+new file mode 100644
+index 0000000..e61e354
+--- /dev/null
++++ b/units/funk_rw.socket.in
+@@ -0,0 +1,7 @@
++[Socket]
++ListenStream=@RUNDIR@/funk/socket
++SocketMode=0600
++Service=funk.service
++
++[Install]
++WantedBy=sockets.target
+diff --git a/with-autoconf/Makefile.in b/with-autoconf/Makefile.in
+index a0ca227..73f8519 100644
+--- a/with-autoconf/Makefile.in
++++ b/with-autoconf/Makefile.in
+@@ -84,16 +84,20 @@ dist-clean:
+ 
+ .PHONY: start
+ start:
+-	-systemctl start funk.socket
++	-systemctl start funk_rw.socket
++	-systemctl start funk_ro.socket
+ 	-systemctl start funk.service
+-	-systemctl status funk.socket
++	-systemctl status funk_rw.socket
++	-systemctl status funk_ro.socket
+ 	-systemctl status funk.service
+ 
+ .PHONY: stop
+ stop:
+ 	-systemctl stop funk.service
+-	-systemctl stop funk.socket
+-	-systemctl status funk.socket
++	-systemctl stop funk_rw.socket
++	-systemctl stop funk_ro.socket
++	-systemctl status funk_rw.socket
++	-systemctl status funk_ro.socket
+ 	-systemctl status funk.service
+ 
+ .PHONY: restart
+@@ -104,4 +108,5 @@ restart:
+ .PHONY: enable
+ enable:
+ 	systemctl enable funk.service
+-	systemctl enable funk.socket
++	systemctl enable funk_rw.socket
++	systemctl enable funk_ro.socket
+diff --git a/with-autoconf/configure.ac b/with-autoconf/configure.ac
+index e04ea4e..fd8bce5 100644
+--- a/with-autoconf/configure.ac
++++ b/with-autoconf/configure.ac
+@@ -11,7 +11,8 @@ AC_CONFIG_FILES([Makefile
+ 		 Config.mk
+ 		 units/funk_regular.service
+ 		 units/funk_dynamic.service
+-		 units/funk.socket])
++		 units/funk_rw.socket
++		 units/funk_ro.socket])
+ AC_CONFIG_HEADERS([config.h])
+ AC_CONFIG_AUX_DIR([build-aux])
+ 
+diff --git a/with-automake/Makefile.am b/with-automake/Makefile.am
+index 4802067..ea356c6 100644
+--- a/with-automake/Makefile.am
++++ b/with-automake/Makefile.am
+@@ -22,7 +22,8 @@ reload:
+ enable:
+ 	systemctl daemon-reload
+ 	systemctl enable funk.service
+-	systemctl enable funk.socket
++	systemctl enable funk_rw.socket
++	systemctl enable funk_ro.socket
+ 
+ install-sockets:
+ 	cp units/*.socket @SYSTEMD_DIR@/
+@@ -63,19 +64,22 @@ dist-clean:
+ 
+ .PHONY: status
+ status:
+-	-systemctl status funk.socket
++	-systemctl status funk_rw.socket
++	-systemctl status funk_ro.socket
+ 	-systemctl status funk.service
+ 
+ .PHONY: start
+ start:
+-	-systemctl start funk.socket
++	-systemctl start funk_rw.socket
++	-systemctl start funk_ro.socket
+ 	-systemctl start funk.service
+ 	-make status
+ 
+ .PHONY: stop
+ stop:
+ 	-systemctl stop funk.service
+-	-systemctl stop funk.socket
++	-systemctl stop funk_rw.socket
++	-systemctl stop funk_ro.socket
+ 	-make status
+ 
+ .PHONY: restart
+diff --git a/with-automake/configure.ac b/with-automake/configure.ac
+index df9ba69..02c401b 100644
+--- a/with-automake/configure.ac
++++ b/with-automake/configure.ac
+@@ -11,7 +11,8 @@ AC_CONFIG_FILES([Makefile
+ 		 Config.mk
+ 		 units/funk_regular.service
+ 		 units/funk_dynamic.service
+-		 units/funk.socket])
++		 units/funk_ro.socket
++		 units/funk_rw.socket])
+ AC_CONFIG_HEADERS([config.h])
+ AC_CONFIG_AUX_DIR([build-aux])
+ 
+-- 
+2.0.0.rc3.18.g00a5b79
+

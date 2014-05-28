@@ -1,0 +1,110 @@
+Funkd
+=====
+
+Funkd provides a simple systemd unix domain socket deamon example with 3
+types of implementations supported and with m4 autoconf library helpers for
+systemd, and with an example build environemnt provided with just autoconf,
+and then also with automake.
+
+The purpose of this example set is to help you get ramped up with systemd with
+the different types of build environment requirements you may have, and provide
+an m4 library to help you integrate support for systemd autoconf. This example
+set also illustrates a small race condition which could be present on many
+typical unix daemons, which the sd_notify() interface addresses explicitly.
+
+This sample set provides:
+
+  * src/m4/systemd.m4 - LGPL m4 library for autoconf -- see below for more
+  * src/m4/paths.m4   - LGPL m4 library for expanding @VARS@ for service target
+
+  * Legacy unix domain socket daemon example, with race condition addressed
+  * Systemd notify daemon, using shared libraries
+  * Systemd notify daemon, using dynamic link loader
+
+Funkd legacy unix domain socket example
+=======================================
+
+This example is provided to illustrate what old unix domain sockets
+do but more importantly provide an example of a race condition addressed
+which some daemons typically do not address, and which the sd_notify()
+interface tries to explicitly address when using systemd.
+
+Funk systemd shared library example
+===================================
+
+In most build environment cases you will want to require building support
+for sytsemd as an option, with the legacy behaviour as the alternative. In
+this case when systemd support is enabled the resulting binary will require
+the systemd libraries present on the target systems, even if the system
+was not booted with systemd.
+
+Funk systemd dynamic link loader example
+========================================
+
+This example is provided for daemons which will require the systemd development
+libraries present at build time but which will produce binaries that do not
+require systemd. Systemd libraries will only be required on systems that have
+booted with systemd as the init system. This is possible using the dynamic link
+loader through dlopen() and dlsym(). Another example target is provided,
+funk_math which can be used to test / extend usage of the dynamic link loader.
+
+Autoconf systemd m4 helpers
+===========================
+
+This repository also provides some systmed autoconf helpers:
+
+  * src/m4/systemd.m4
+
+    - AX_ENABLE_SYSTEMD(): enables systemd by default and requires an
+      explicit --disable-systemd option flag to configure if you want to
+      disable systemd support.
+
+    - AX_ALLOW_SYSTEMD(): systemd will be disabled by default and requires
+      you to run configure with --enable-systemd to look for and enable systemd
+
+    - AX_AVAILABLE_SYSTEMD(): systemd will be disabled by default but if your
+      build system is detected to have systemd build libraries it will be
+      enabled. You can always force disable with --disable-systemd
+
+    - If you want to use the dynamic link loader you should use
+      AX_AVAILABLE_SYSTEMD() but must then ensure to use -rdynamic -ldl
+      when linking, if using automake autotools will deal with this for you,
+      otherwise you must ensure this is in place on your Makefile.
+
+  * src/m4/paths.m4 - AX_LOCAL_EXPAND_CONFIG() path expansion helper
+    Helper to allow us to use @VAR@ replacements with AC_CONFIG_FILES() on the
+    Makefiles and target service unit files. This is particularly useful for
+    systemd deaemons using autotools given that systemd ExectStart does not
+    allow variables to be used for the binary specification. AC_CONFIG_FILES()
+    will only parse variables already set with AC_SUBST(), this requires
+    expansion on some variables that depend on $(prefix) but this isn't set
+    until after running configure, so preset that variable with the autoconf
+    default. To use this expansion helper just call AX_LOCAL_EXPAND_CONFIG()
+    after AC_PROG_CC() and before AC_OUTPUT(). Note that although this example
+    doesn't use AC_CONFIG_FILES() substituations on c / header files this is
+    is indeed appropriate for some cases, in funkd' case it should be using
+    it for the /var/run/funkd/ socket path.
+
+Multiple daemons options
+========================
+
+If you a deamon that can run under two separate binaries and they are mutually
+exclusive you have a few options:
+
+  * Use target file and two separate service unit files for each daemon
+  * Use two service files and have each declare an alias for the main service,
+    for example, Alias=funk.service
+  * Use one service file, and environment variables to define the default
+    and a launcher which will getenv() and execve() the default daemon
+
+There is no exact preferred way. For details see:
+
+http://lists.freedesktop.org/archives/systemd-devel/2014-May/019427.html
+
+Multiple socket note
+====================
+
+The patch patches/0001-funkd-splits-sockets-into-two-service-units.patch
+implements support for defining the sockets separatley which would then
+not require our code to chmod the sockets ourselves, but applying this
+creates an issue with sd_is_socket_unix().
