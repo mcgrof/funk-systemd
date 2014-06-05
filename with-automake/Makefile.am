@@ -18,8 +18,14 @@ funk_math_SOURCES = funk_math.c
 reload:
 	-systemctl daemon-reload
 
+.PHONY: disable
+disable:
+	systemctl disable funk.service
+	systemctl disable funk.socket
+
 .PHONY: enable
 enable:
+	make disable
 	systemctl daemon-reload
 	systemctl enable funk.service
 	systemctl enable funk.socket

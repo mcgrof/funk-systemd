@@ -101,7 +101,13 @@ restart:
 	@-make stop
 	@-make start
 
+.PHONY: disable
+disable:
+	systemctl disable funk.service
+	systemctl disable funk.socket
+
 .PHONY: enable
 enable:
+	make disable
 	systemctl enable funk.service
 	systemctl enable funk.socket
