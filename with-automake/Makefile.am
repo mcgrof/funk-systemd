@@ -29,13 +29,13 @@ install-sockets:
 
 install-reg:
 	make install-sockets
-	cp funk_regular $(bindir)/funk
+	cp funk_regular $(bindir)/
 	cp units/funk_regular.service @SYSTEMD_DIR@/funk.service
 	make enable
 
 install-dyn:
 	make install-sockets
-	cp funk_regular $(bindir)/funk
+	cp funk_regular $(bindir)/
 	cp units/funk_dynamic.service @SYSTEMD_DIR@/funk.service
 	make enable
 
