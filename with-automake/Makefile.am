@@ -41,7 +41,7 @@ install-reg:
 
 install-dyn:
 	make install-sockets
-	cp funk_regular $(bindir)/
+	cp funk_dynamic $(bindir)/
 	cp units/funk_dynamic.service @SYSTEMD_DIR@/funk.service
 	make enable
 
