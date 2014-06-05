@@ -41,7 +41,7 @@
 
 int main(void)
 {
-	int r;
+	int r, err;
 	bool _sd_booted = false;
 
 	r = funk_test_open_tmp();
@@ -55,11 +55,11 @@ int main(void)
 	if (!_sd_booted) {
 		r = funk_legacy_daemon_init();
 		if (r != 0)
-			return r;
+			goto out;
 	} else {
 		r = funk_claim_active_sockets();
 		if (r != 0)
-			return r;
+			goto out;
 #if defined(HAVE_SYSTEMD)
 		sd_notify(1, "READY=1");
 #endif
@@ -68,8 +68,12 @@ int main(void)
 	while (true) {
 		r = funk_main_loop(_sd_booted);
 		if (r != 0)
-			return r;
+			goto out;
 	}
 
 	return 0;
+out:
+	err = r < 0 ? -r : r;
+	fprintf(stderr, SD_ERR "Error: %d (%s)\n", err, strerror(err));
+	return r;
 }

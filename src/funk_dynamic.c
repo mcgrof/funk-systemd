@@ -63,7 +63,7 @@
 int main(void)
 {
 	struct funk_sd_ctx *ctx;
-	int r;
+	int r, err;
 	bool sd_booted = false;
 
 	r = funk_test_open_tmp();
@@ -92,6 +92,9 @@ int main(void)
 	}
 
 out:
+	err = r < 0 ? -r : r;
 	funk_free_sd_ctx(ctx);
+	if (err != 0)
+		fprintf(stderr, SD_ERR "Error: %d (%s)\n", err, strerror(err));
 	return r;
 }

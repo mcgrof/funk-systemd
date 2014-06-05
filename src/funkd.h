@@ -82,6 +82,12 @@ const struct funk_systemd_active_socket *
 funk_get_active_socket_by_path(const char *connect_to);
 int funk_active_socket_loop(void);
 #else
+
+/* Let's us print to systemd and regular logs regardless init */
+#ifndef SD_ERR
+#define SD_ERR
+#endif
+
 const struct funk_systemd_active_socket *funk_active_sockets = NULL;
 
 static inline struct funk_systemd_active_socket *
