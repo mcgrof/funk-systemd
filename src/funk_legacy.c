@@ -113,7 +113,7 @@ int funk_create_sockets(void)
 	if (r !=0 && errno != EEXIST)
 		return -errno;
 
-	for (i=0; i<ARRAY_SIZE(funk_active_sockets); i++) {
+	for (i=0; i<ARRAY_SIZE(funk_legacy_sockets); i++) {
 		legacy_socket = &funk_legacy_sockets[i];
 
 		if (!legacy_socket->type)
