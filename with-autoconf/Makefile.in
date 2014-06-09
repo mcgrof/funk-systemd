@@ -13,20 +13,26 @@ all: funk_regular funk_dynamic funk_math
 funk_math: funk_math.o
 	$(CC) $(CFLAGS) -Wall -rdynamic -ldl $^ -o $@
 
+ifeq ($(CONFIG_SYSTEMD),y)
+EXTRA_OBJS  = funk_shared_active.o
+EXTRA_OBJS += funk_dynamic_helpers.o
+endif
+
 # Systemd library using the dynamic link loader, works on any system
-funk_dynamic: $(SHARED_OBJS) funk_dynamic.o funk_dynamic_helpers.o funk_shared_active.o
+funk_dynamic: $(SHARED_OBJS) $(EXTRA_OBJS) funk_dynamic.o
 	$(CC) $(CFLAGS) -Wall -rdynamic -ldl $^ -o $@
 
 # A binary without the dynamic linker requires a bit more overhead on
 # the config side, without systemd you can't run the binary
 ifeq ($(CONFIG_SYSTEMD),y)
-SHARED_OBJS += funk_shared_active.o
+EXTRA_OBJS  = funk_shared_active.o
+EXTRA_OBJS += funk_regular_helpers.o
 endif
 
 CFLAGS  += $(SYSTEMD_CFLAGS)
 LDFLAGS += $(SYSTEMD_LIBS)
 
-funk_regular: $(SHARED_OBJS) funk_regular.o funk_regular_helpers.o
+funk_regular: $(SHARED_OBJS) $(EXTRA_OBJS) funk_regular.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -Wall -o $@
 
 .PHONY: reload
