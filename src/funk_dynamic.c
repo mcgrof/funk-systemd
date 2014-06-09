@@ -80,8 +80,10 @@ int main(void)
 			goto out;
 	} else {
 		r = funk_claim_active_sockets(ctx);
-		if (r != 0)
+		if (r != 0) {
+			fprintf(stderr, SD_ERR "Failed to claim sockets\n");
 			goto out;
+		}
 		funk_sd_notify_ready(ctx);
 	}
 

@@ -145,10 +145,15 @@ int funk_claim_active_sockets(struct funk_sd_ctx *ctx)
 		return -EBADR;
 	}
 
+	fprintf(stderr, SD_NOTICE "%d sockets are expected to be used\n", n);
+
 	for (fd = SD_LISTEN_FDS_START; fd < SD_LISTEN_FDS_START + n; fd++) {
 		r = funk_validate_active_socket(ctx, fd);
-		if (r != 0)
+		if (r != 0) {
+			fprintf(stderr, SD_NOTICE "failed validating fd %d\n", fd);
 			return r;
+		}
+		fprintf(stderr, SD_NOTICE "fd %d is OK!\n", fd);
 	}
 
 	fprintf(stderr, SD_NOTICE "%d active sockets have been claimed\n", n);
