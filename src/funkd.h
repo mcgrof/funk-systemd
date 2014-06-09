@@ -28,7 +28,6 @@
 
 #if defined(HAVE_SYSTEMD)
 #include <systemd/sd-daemon.h>
-#include <dlfcn.h>
 #endif
 
 #ifndef ARRAY_SIZE

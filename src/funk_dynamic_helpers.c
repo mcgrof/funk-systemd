@@ -1,4 +1,5 @@
 #include <funkd.h>
+#include <dlfcn.h>
 
 #define FUNK_SYSTEMD_FUNCS										\
 	int (*sd_booted)(void);										\
