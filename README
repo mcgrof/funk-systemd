@@ -107,4 +107,10 @@ Multiple socket note
 The patch patches/0001-funkd-splits-sockets-into-two-service-units.patch
 implements support for defining the sockets separatley which would then
 not require our code to chmod the sockets ourselves, but applying this
-creates an issue with sd_is_socket_unix().
+creates an issue with sd_is_socket_unix(). Note that if you test this
+patch you should can easily run into issues if you revert back out of
+the patch and expect the program to work correctly, the reason for this
+is that the extra socket files will be lingering around and systemd will
+count them as valid sockets that need to be claimed by the program. If
+you revert this patch be sure to remove from systemd (systemctl stop and
+systemctl remove) the socket files that it adds.
