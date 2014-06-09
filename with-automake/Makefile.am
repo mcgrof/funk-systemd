@@ -7,11 +7,21 @@ AM_LDFLAGS = $(SYSTEMD_LIBS)
 SHARED_C = funk_shared.c funk_legacy.c
 
 bin_PROGRAMS = funk_regular funk_dynamic funk_math
-funk_dynamic_SOURCES = $(SHARED_C) funk_dynamic.c funk_dynamic_helpers.c funk_shared_active.c
+
 if CONFIG_SYSTEMD
-EXTRA_C = funk_shared_active.c
+EXTRA_C_DYN  = funk_shared_active.c
+EXTRA_C_DYN += funk_dynamic_helpers.c
 endif
-funk_regular_SOURCES = $(SHARED_C) $(EXTRA_C) funk_regular.c funk_regular_helpers.c
+
+funk_dynamic_SOURCES = $(SHARED_C) $(EXTRA_C_DYN) funk_dynamic.c
+
+if CONFIG_SYSTEMD
+EXTRA_C  = funk_shared_active.c
+EXTRA_C += funk_regular_helpers.c
+endif
+
+funk_regular_SOURCES = $(SHARED_C) $(EXTRA_C) funk_regular.c
+
 funk_math_SOURCES = funk_math.c
 
 .PHONY: reload
