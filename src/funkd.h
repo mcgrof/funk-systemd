@@ -87,8 +87,6 @@ int funk_active_socket_loop(void);
 #define SD_ERR
 #endif
 
-const struct funk_systemd_active_socket *funk_active_sockets = NULL;
-
 static inline struct funk_systemd_active_socket *
 funk_get_active_socket_by_path(const char *connect_to)
 {
