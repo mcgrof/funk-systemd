@@ -43,28 +43,12 @@ enable:
 install-sockets:
 	cp units/*.socket @SYSTEMD_DIR@/
 
-install-reg:
-	make install-sockets
-	cp funk_regular $(bindir)/
-	cp units/funk_regular.service @SYSTEMD_DIR@/funk.service
-	make enable
-
-install-dyn:
-	make install-sockets
-	cp funk_dynamic $(bindir)/
-	cp units/funk_dynamic.service @SYSTEMD_DIR@/funk.service
-	make enable
-
 install-data-am:
 	make install-sockets
-	@echo
-	@echo You must run either of:
-	@echo
-	@echo    make install-reg
-	@echo    make install-dyn
-	@echo
-	@echo Since you didn't specify we'll run make install-dyn
-	make install-dyn
+	cp funk_regular $(bindir)/
+	cp funk_dynamic $(bindir)/
+	cp units/funk.service @SYSTEMD_DIR@/
+	make reload
 	make enable
 
 maintainer-clean:

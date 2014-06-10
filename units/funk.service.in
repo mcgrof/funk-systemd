@@ -1,0 +1,20 @@
+[Unit]
+Description=Funky daemon
+Requires=funk.socket
+
+[Service]
+Type=notify
+
+# Example of what you can do in order to support
+# legacy daemons and be compatible with both Debian and RPM based
+# systems.
+EnvironmentFile=-/etc/default/funkd
+EnvironmentFile=-/etc/sysconfig/funkd
+
+# Available deamons: funk_dynamic and funk_regular
+Environment=FUNKD=funk_dynamic
+ExecStart=/bin/sh -c "exec @BINDIR@/$FUNKD"
+
+[Install]
+WantedBy=multi-user.target
+Also=funk.socket

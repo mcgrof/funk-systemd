@@ -44,33 +44,14 @@ install-sockets:
 	cp units/*.socket @SYSTEMD_DIR@
 
 
-.PHONY: install-reg
-install-reg: funk_regular
-	cp funk_regular @BINDIR@
-	cp units/funk_regular.service @SYSTEMD_DIR@/funk.service
-	make install-sockets
-	make reload
-	make enable
-
-.PHONY: install-dyn
-install-dyn:
-	cp funk_dynamic @BINDIR@
-	cp units/funk_dynamic.service @SYSTEMD_DIR@/funk.service
-	make install-sockets
-	make reload
-	make enable
-
 .PHONY: install
 install:
 	make install-sockets
-	@echo
-	@echo You must run either of:
-	@echo
-	@echo    make install-reg
-	@echo    make install-dyn
-	@echo
-	@echo Since you didn't specify we'll run make install-dyn
-	make install-dyn
+	cp funk_regular @BINDIR@
+	cp funk_dynamic @BINDIR@
+	cp units/funk.service @SYSTEMD_DIR@/
+	make reload
+	make enable
 
 .PHONY: clean
 clean:

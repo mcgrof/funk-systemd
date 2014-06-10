@@ -9,8 +9,7 @@ AC_INIT([Funk Systemd Sample Daemon],  [v1.0],
 AC_CONFIG_SRCDIR([funk_dynamic.c])
 AC_CONFIG_FILES([Makefile
 		 Config.mk
-		 units/funk_regular.service
-		 units/funk_dynamic.service
+		 units/funk.service
 		 units/funk.socket])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([build-aux])

@@ -88,16 +88,26 @@ This repository also provides some systmed autoconf helpers:
 Multiple daemons options
 ========================
 
-If you a deamon that can run under two separate binaries and they are mutually
-exclusive you have a few options:
+If you have a deamon that can run under two separate binaries and they are
+mutually exclusive you have a few options:
 
-  * Use target file and two separate service unit files for each daemon
-  * Use two service files and have each declare an alias for the main service,
-    for example, Alias=funk.service
-  * Use one service file, and environment variables to define the default
-    and a launcher which will getenv() and execve() the default daemon
+  0) Use target file and two separate service unit files for each daemon
+  1) Use two service files and have each declare an alias for the main service,
+     for example, Alias=funk.service
+  2) Use one service file, and environment variables to define the default
+     and a launcher which will getenv() and execve() the default daemon
+  3) Use sh -c exec "/path/$YOURD" on the ExecStart with Environment=YOURD=foo
+     on the service file.
 
-There is no exact preferred way. For details see:
+There is no exact prefered strategy, this daemon use sh -c exec given that
+the other options require duplicating the service files. This option lets
+us avoid implementing a launcher and also advocates avoiding using of
+the /etc/default and /etc/sysconfig/ directory for configuration files
+by not providing one but still using it in unde the assumption that legacy
+daemons used them. Folks should migrate away from those and just define the
+configuration preferneces on the unit files themselves.
+
+For a discussion on this topic you can refer to:
 
 http://lists.freedesktop.org/archives/systemd-devel/2014-May/019427.html
 
