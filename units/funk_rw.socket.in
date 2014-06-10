@@ -1,0 +1,7 @@
+[Socket]
+ListenStream=@RUNDIR@/funk/socket
+SocketMode=0600
+Service=funk.service
+
+[Install]
+WantedBy=sockets.target

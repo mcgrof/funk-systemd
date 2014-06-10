@@ -31,14 +31,16 @@ reload:
 .PHONY: disable
 disable:
 	systemctl disable funk.service
-	systemctl disable funk.socket
+	systemctl disable funk_rw.socket
+	systemctl disable funk_ro.socket
 
 .PHONY: enable
 enable:
 	make disable
 	systemctl daemon-reload
 	systemctl enable funk.service
-	systemctl enable funk.socket
+	systemctl enable funk_rw.socket
+	systemctl enable funk_ro.socket
 
 install-sockets:
 	cp units/*.socket @SYSTEMD_DIR@/
@@ -63,19 +65,22 @@ dist-clean:
 
 .PHONY: status
 status:
-	-systemctl status funk.socket
+	-systemctl status funk_rw.socket
+	-systemctl status funk_ro.socket
 	-systemctl status funk.service
 
 .PHONY: start
 start:
-	-systemctl start funk.socket
+	-systemctl start funk_rw.socket
+	-systemctl start funk_ro.socket
 	-systemctl start funk.service
 	-make status
 
 .PHONY: stop
 stop:
 	-systemctl stop funk.service
-	-systemctl stop funk.socket
+	-systemctl stop funk_rw.socket
+	-systemctl stop funk_ro.socket
 	-make status
 
 .PHONY: restart

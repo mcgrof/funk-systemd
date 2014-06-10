@@ -1,6 +1,6 @@
 [Unit]
 Description=Funky daemon
-Requires=funk.socket
+Requires=funk_ro.socket funk_rw.socket
 
 [Service]
 Type=notify
@@ -17,4 +17,4 @@ ExecStart=/bin/sh -c "exec @BINDIR@/$FUNKD"
 
 [Install]
 WantedBy=multi-user.target
-Also=funk.socket
+Also=funk_ro.socket funk_rw.socket

@@ -1,7 +1,6 @@
 [Socket]
-ListenStream=@RUNDIR@/funk/socket
 ListenStream=@RUNDIR@/funk/socket_ro
-SocketMode=0600
+SocketMode=0400
 Service=funk.service
 
 [Install]

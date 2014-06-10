@@ -12,7 +12,6 @@ const struct funk_systemd_active_socket funk_active_sockets[5] = {
 		.type = 0,
 		.listening = 0,
 		.path = "stdin",
-		.mode = 0600,
 		.length = 0,
 	},
 	{
@@ -20,7 +19,6 @@ const struct funk_systemd_active_socket funk_active_sockets[5] = {
 		.type = 0,
 		.listening = 0,
 		.path = "stderr",
-		.mode = 0600,
 		.length = 0,
 	},
 	{
@@ -28,7 +26,6 @@ const struct funk_systemd_active_socket funk_active_sockets[5] = {
 		.type = 0,
 		.listening = 0,
 		.path = "stderr",
-		.mode = 0600,
 		.length = 0,
 	},
 	{
@@ -36,7 +33,6 @@ const struct funk_systemd_active_socket funk_active_sockets[5] = {
 		.type = SOCK_STREAM,
 		.listening = 1,
 		.path = "/var/run/funk/socket",
-		.mode = 0600,
 		.length = 0,
 	},
 	{
@@ -44,7 +40,6 @@ const struct funk_systemd_active_socket funk_active_sockets[5] = {
 		.type = SOCK_STREAM,
 		.listening = 1,
 		.path = "/var/run/funk/socket_ro",
-		.mode = 0400,
 		.length = 0,
 	},
 };

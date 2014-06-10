@@ -54,7 +54,6 @@ struct funk_systemd_active_socket {
 	int type;
 	int listening;
 	const char *path;
-	int mode;
 	size_t length;
 };
 

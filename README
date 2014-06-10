@@ -114,13 +114,15 @@ http://lists.freedesktop.org/archives/systemd-devel/2014-May/019427.html
 Multiple socket note
 ====================
 
-The patch patches/0001-funkd-splits-sockets-into-two-service-units.patch
-implements support for defining the sockets separatley which would then
-not require our code to chmod the sockets ourselves, but applying this
-creates an issue with sd_is_socket_unix(). Note that if you test this
-patch you should can easily run into issues if you revert back out of
-the patch and expect the program to work correctly, the reason for this
-is that the extra socket files will be lingering around and systemd will
-count them as valid sockets that need to be claimed by the program. If
-you revert this patch be sure to remove from systemd (systemctl stop and
-systemctl remove) the socket files that it adds.
+We support multiple sockets as an example, and provide different permissions
+for those sockets, systemd allows right now to specify multiple sockets on
+one file however at this point though does not let you specify different
+permissions for each of those sockest. To enable you to use different
+permissions on different sockets right now you have to split up the sockets
+into separate files. The order in which you specify the sockets on the
+service unit file matters, in this case the first socket passed gets the
+last file descriptor. This will need to be documented on systemd given that
+otherwise this could lead to functionality regressions if this should change
+at some other point in time. A better solution would keep the current behavior
+as-is for multiple sockets but add support to systemd to split let you specify
+different permissions for differnet sockets on the same socket file.
