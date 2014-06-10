@@ -84,6 +84,7 @@ int funk_create_socket(struct funk_legacy_socket *legacy_socket)
 	if (strlen(legacy_socket->path) >= sizeof(addr.sun_path))
 		return -EINVAL;
 
+	memset(addr.sun_path, 0, sizeof(addr.sun_path));
 	strncpy(addr.sun_path,
 		legacy_socket->path,
 		strlen(legacy_socket->path));
@@ -284,7 +285,9 @@ int funk_legacy_socket_loop(void)
 
 	fd = accept(legacy_socket->fd, NULL, NULL);
 	if (fd < 0) {
-		fprintf(stderr, "Invalid connection, skipping\n");
+		fprintf(stderr, "Invalid connection on fd %d for %s, skipping\n",
+			legacy_socket->fd,
+			legacy_socket->path);
 		goto out;
 	}
 
