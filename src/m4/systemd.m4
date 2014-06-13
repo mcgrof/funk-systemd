@@ -83,10 +83,13 @@ AC_DEFUN([AX_CHECK_SYSTEMD_LIBS], [
 ])
 
 AC_DEFUN([AX_CHECK_SYSTEMD], [
-	AS_IF([test "x$systemd" = "xy" ], [
-	    AC_DEFINE([HAVE_SYSTEMD], [1], [Systemd available and enabled])
-	    systemd=y
-	    AX_CHECK_SYSTEMD_LIBS()
+	dnl Respect user override to disable
+	AS_IF([test "x$enable_systemd" != "xno"], [
+	     AS_IF([test "x$systemd" = "xy" ], [
+		AC_DEFINE([HAVE_SYSTEMD], [1], [Systemd available and enabled])
+			systemd=y
+			AX_CHECK_SYSTEMD_LIBS()
+	    ],[systemd=n])
 	],[systemd=n])
 ])
 
