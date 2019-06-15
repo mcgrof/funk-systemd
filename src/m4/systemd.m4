@@ -1,6 +1,6 @@
 # systemd.m4 - Macros to check for and enable systemd          -*- Autoconf -*-
 #
-# Copyright (C) 2014 Luis R. Rodriguez <mcgrof@suse.com>
+# Copyright (C) 2014,2019 Luis Chamberlain <mcgrof@kernel.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,25 +16,48 @@
 # along with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-dnl Some optional path options
-AC_DEFUN([AX_SYSTEMD_OPTIONS], [
-	AC_ARG_WITH(systemd, [  --with-systemd          set directory for systemd service files],
+dnl Some optional path options when your system is detected as systemd being
+dnl the init process.
+AC_DEFUN([AX_SYSTEMD_INIT_OPTIONS], [
+	AC_ARG_WITH(systemdisinit, [  --with-systemd-user     set user directory for systemd service files],
+		SYSTEMD_USER_DIR="$withval", SYSTEMD_USER_DIR="")
+	AC_SUBST(SYSTEMD_USER_DIR)
+
+	AC_ARG_WITH(systemdisinit, [  --with-systemd          set directory for systemd service files],
 		SYSTEMD_DIR="$withval", SYSTEMD_DIR="")
 	AC_SUBST(SYSTEMD_DIR)
 
-	AC_ARG_WITH(systemd, [  --with-systemd-modules-load          set directory for systemd modules load files],
+	AC_ARG_WITH(systemdisinit, [  --with-systemd-modules-load          set directory for systemd modules load files],
 		SYSTEMD_MODULES_LOAD="$withval", SYSTEMD_MODULES_LOAD="")
 	AC_SUBST(SYSTEMD_MODULES_LOAD)
 ])
 
+AC_DEFUN([AX_ENABLE_SYSTEMD_SYSTEM_OPTS], [
+	AX_ARG_DEFAULT_ENABLE([systemdisinit], [Confirms systemd is your init process])
+	AX_SYSTEMD_INIT_OPTIONS()
+])
+
+AC_DEFUN([AX_ALLOW_SYSTEMD_SYSTEM_OPTS], [
+	AX_ARG_DEFAULT_DISABLE([systemdisinit], [Disables systemd as your init process])
+	AX_SYSTEMD_INIT_OPTIONS()
+])
+
 AC_DEFUN([AX_ENABLE_SYSTEMD_OPTS], [
-	AX_ARG_DEFAULT_ENABLE([systemd], [Disable systemd support])
-	AX_SYSTEMD_OPTIONS()
+	AX_ARG_DEFAULT_ENABLE([systemd], [Disable systemd development support])
+])
+
+AC_DEFUN([AX_ENABLE_SYSTEMD_INIT_OPTS], [
+	AX_ARG_DEFAULT_ENABLE([systemdisinit], [Disable systemd init support])
+	AX_SYSTEMD_INIT_OPTIONS()
 ])
 
 AC_DEFUN([AX_ALLOW_SYSTEMD_OPTS], [
-	AX_ARG_DEFAULT_DISABLE([systemd], [Enable systemd support])
-	AX_SYSTEMD_OPTIONS()
+	AX_ARG_DEFAULT_DISABLE([systemd], [Enable systemd development support])
+])
+
+AC_DEFUN([AX_ALLOW_SYSTEMD_INIT_OPTS], [
+	AX_ARG_DEFAULT_DISABLE([systemdisinit], [Enable systemd init support])
+	AX_SYSTEMD_INIT_OPTIONS()
 ])
 
 AC_DEFUN([AX_CHECK_SYSTEMD_LIBS], [
@@ -52,29 +75,30 @@ AC_DEFUN([AX_CHECK_SYSTEMD_LIBS], [
 	AC_SUBST([SYSTEMD_CFLAGS])
 	AC_SUBST([SYSTEMD_LIBS])
 
+])
+
+AC_DEFUN([AX_CHECK_SYSTEMD_VARS], [
 	AS_IF([test "x$SYSTEMD_DIR" = x], [
-	    dnl In order to use the line below we need to fix upstream systemd
-	    dnl to properly ${prefix} for child variables in
-	    dnl src/core/systemd.pc.in but this is a bit complex at the
-	    dnl moment as they depend on another rootprefix, which can vary
-	    dnl from prefix in practice. We provide our own definition as we
-	    dnl *know* where systemd will dump this to, but this does limit
-	    dnl us to stick to a non custom systemdsystemunitdir, dnl to work
-	    dnl around this we provide the additional configure option
-	    dnl --with-systemd where you can specify the directory for the unit
-	    dnl files. It would also be best to just extend the upstream
-	    dnl pkg-config  pkg.m4 with an AC_DEFUN() to do this neatly.
-	    dnl SYSTEMD_DIR="`$PKG_CONFIG --define-variable=prefix=$PREFIX --variable=systemdsystemunitdir systemd`"
-	    SYSTEMD_DIR="\$(prefix)/lib/systemd/system/"
+	    SYSTEMD_DIR='${prefix}/lib/systemd/system/'
+	    AC_SUBST(SYSTEMD_DIR)
+	], [])
+
+	AS_IF([test "x$SYSTEMD_USER_DIR" = x], [
+	    SYSTEMD_USER_DIR='${prefix}/lib/systemd/user'
+	    AC_SUBST(SYSTEMD_USER_DIR)
 	], [])
 
 	AS_IF([test "x$SYSTEMD_DIR" = x], [
 	    AC_MSG_ERROR([SYSTEMD_DIR is unset])
 	], [])
 
+	AS_IF([test "x$SYSTEMD_USER_DIR" = x], [
+	    AC_MSG_ERROR([SYSTEMD_USER_DIR is unset])
+	], [])
+
 	dnl There is no variable for this yet for some reason
 	AS_IF([test "x$SYSTEMD_MODULES_LOAD" = x], [
-	    SYSTEMD_MODULES_LOAD="\$(prefix)/lib/modules-load.d/"
+	    SYSTEMD_MODULES_LOAD='${prefix}/lib/modules-load.d/'
 	], [])
 
 	AS_IF([test "x$SYSTEMD_MODULES_LOAD" = x], [
@@ -82,15 +106,37 @@ AC_DEFUN([AX_CHECK_SYSTEMD_LIBS], [
 	], [])
 ])
 
+
 AC_DEFUN([AX_CHECK_SYSTEMD], [
 	dnl Respect user override to disable
 	AS_IF([test "x$enable_systemd" != "xno"], [
 	     AS_IF([test "x$systemd" = "xy" ], [
-		AC_DEFINE([HAVE_SYSTEMD], [1], [Systemd available and enabled])
+		AC_DEFINE([HAVE_SYSTEMD], [1], [Systemd development libraries available and enabled])
 			systemd=y
 			AX_CHECK_SYSTEMD_LIBS()
 	    ],[systemd=n])
 	],[systemd=n])
+])
+
+AC_DEFUN([AX_CHECK_SYSTEMD_INIT], [
+	dnl Respect user override to disable
+	AS_IF([test "x$enable_systemdinit" != "xno"], [
+	     AS_IF([test "x$systemdisinit" = "xy" ], [
+		AC_DEFINE([HAVE_SYSTEMD_INIT], [1], [Systemd init running])
+			systemdisinit=y
+			AX_CHECK_SYSTEMD_VARS()
+	    ],[systemdisinit=n])
+	],[systemdisinit=n])
+])
+
+AC_DEFUN([AX_CHECK_SYSTEMD_INIT_ENABLE_AVAILABLE], [
+	AC_CACHE_CHECK([if systemd is your init], [systemd_cv_init],
+	     [systemd_cv_init=no
+	      systemdpid=x`pidof -s systemd`
+	      if test "$systemdpid" != x; then
+		systemd_cv_init=yes
+		systemdisinit=y
+	      fi])
 ])
 
 AC_DEFUN([AX_CHECK_SYSTEMD_ENABLE_AVAILABLE], [
@@ -102,14 +148,18 @@ AC_DEFUN([AX_CHECK_SYSTEMD_ENABLE_AVAILABLE], [
 dnl Enables systemd by default and requires a --disable-systemd option flag
 dnl to configure if you want to disable.
 AC_DEFUN([AX_ENABLE_SYSTEMD], [
+	AX_ENABLE_SYSTEMD_INIT_OPTS()
 	AX_ENABLE_SYSTEMD_OPTS()
+	AX_CHECK_SYSTEMD_INIT()
 	AX_CHECK_SYSTEMD()
 ])
 
 dnl Systemd will be disabled by default and requires you to run configure with
 dnl --enable-systemd to look for and enable systemd.
 AC_DEFUN([AX_ALLOW_SYSTEMD], [
+	AX_ALLOW_SYSTEMD_INIT_OPTS()
 	AX_ALLOW_SYSTEMD_OPTS()
+	AX_CHECK_SYSTEMD_INIT()
 	AX_CHECK_SYSTEMD()
 ])
 
@@ -117,7 +167,10 @@ dnl Systemd will be disabled by default but if your build system is detected
 dnl to have systemd build libraries it will be enabled. You can always force
 dnl disable with --disable-systemd
 AC_DEFUN([AX_AVAILABLE_SYSTEMD], [
+	AX_ALLOW_SYSTEMD_INIT_OPTS()
 	AX_ALLOW_SYSTEMD_OPTS()
+	AX_CHECK_SYSTEMD_INIT_ENABLE_AVAILABLE()
 	AX_CHECK_SYSTEMD_ENABLE_AVAILABLE()
+	AX_CHECK_SYSTEMD_INIT()
 	AX_CHECK_SYSTEMD()
 ])

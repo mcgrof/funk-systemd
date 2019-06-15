@@ -47,5 +47,6 @@ m4_include([m4/paths.m4])
 
 AX_LOCAL_EXPAND_CONFIG()
 AX_AVAILABLE_SYSTEMD()
+AM_CONDITIONAL(CONFIG_SYSTEMD_INIT, [test x"$systemdisinit" = xy])
 AM_CONDITIONAL(CONFIG_SYSTEMD, [test x"$systemd" = xy])
 AC_OUTPUT
