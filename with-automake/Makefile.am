@@ -8,14 +8,14 @@ SHARED_C = funk_shared.c funk_legacy.c
 
 bin_PROGRAMS = funk_regular funk_dynamic funk_math
 
-if CONFIG_SYSTEMD
+if CONFIG_SYSTEMD_DEV
 EXTRA_C_DYN  = funk_shared_active.c
 EXTRA_C_DYN += funk_dynamic_helpers.c
 endif
 
 funk_dynamic_SOURCES = $(SHARED_C) $(EXTRA_C_DYN) funk_dynamic.c
 
-if CONFIG_SYSTEMD
+if CONFIG_SYSTEMD_DEV
 EXTRA_C  = funk_shared_active.c
 EXTRA_C += funk_regular_helpers.c
 endif
@@ -45,20 +45,19 @@ enable:
 install-sockets:
 	cp units/*.socket @SYSTEMD_DIR@/
 
-install-data-am:
-	make install-sockets
-	cp funk_regular $(bindir)/
-	cp funk_dynamic $(bindir)/
-	cp units/funk.service @SYSTEMD_DIR@/
-	make reload
-	make enable
+systemdsystemunitdir = @systemdsystemunitdir@
+systemdsystemunit_DATA = units/funk_ro.socket \
+			 units/funk_rw.socket \
+			 units/funk.service
+
+install-data-hook: reload enable
 
 maintainer-clean:
 	-make clean
 	-rm -rf autom4te.cache configure config.status config.log \
 		config.h config.h.in config.h.in~ stamp-h1 aclocal.m4 \
 		build-aux Makefile.in Makefile Config.mk \
-		units/*.service units/*.socket
+		$(systemdsystemunit_DATA)
 
 dist-clean:
 	-make maintainer-clean

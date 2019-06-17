@@ -13,7 +13,7 @@ all: funk_regular funk_dynamic funk_math
 funk_math: funk_math.o
 	$(CC) $(CFLAGS) -Wall -rdynamic -ldl $^ -o $@
 
-ifeq ($(CONFIG_SYSTEMD),y)
+ifeq ($(CONFIG_SYSTEMD_DEV),y)
 EXTRA_OBJS  = funk_shared_active.o
 EXTRA_OBJS += funk_dynamic_helpers.o
 endif
@@ -24,7 +24,7 @@ funk_dynamic: $(SHARED_OBJS) $(EXTRA_OBJS) funk_dynamic.o
 
 # A binary without the dynamic linker requires a bit more overhead on
 # the config side, without systemd you can't run the binary
-ifeq ($(CONFIG_SYSTEMD),y)
+ifeq ($(CONFIG_SYSTEMD_DEV),y)
 EXTRA_OBJS  = funk_shared_active.o
 EXTRA_OBJS += funk_regular_helpers.o
 endif
@@ -41,7 +41,7 @@ reload:
 
 .PHONY: install-sockets
 install-sockets:
-	cp units/*.socket @SYSTEMD_DIR@
+	cp units/*.socket @systemdsystemunitdir@
 
 
 .PHONY: install
@@ -49,7 +49,7 @@ install:
 	make install-sockets
 	cp funk_regular @BINDIR@
 	cp funk_dynamic @BINDIR@
-	cp units/funk.service @SYSTEMD_DIR@/
+	cp units/funk.service @systemdsystemunitdir@/
 	make reload
 	make enable
 

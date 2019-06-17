@@ -18,18 +18,26 @@
 
 dnl Some optional path options when your system is detected as systemd being
 dnl the init process.
+dnl
+dnl We expect this to grow. For the list of variables refer to:
+dnl
+dnl   pkg-config --print-variables systemd
+dnl
+dnl To see what each variable has, for instance for systemduserunitdir:
+dnl
+dnl   pkg-config --variable=systemduserunitdir systemd
 AC_DEFUN([AX_SYSTEMD_INIT_OPTIONS], [
-	AC_ARG_WITH(systemdisinit, [  --with-systemd-user     set user directory for systemd service files],
-		SYSTEMD_USER_DIR="$withval", SYSTEMD_USER_DIR="")
-	AC_SUBST(SYSTEMD_USER_DIR)
+	AC_ARG_WITH(systemduserunitdir, [  --with-systemduserunitdir=DIR        set user directory for systemd service files],
+		systemduserunitdir="$withval", systemduserunitdir="")
+	AC_SUBST(systemduserunitdir)
 
-	AC_ARG_WITH(systemdisinit, [  --with-systemd          set directory for systemd service files],
-		SYSTEMD_DIR="$withval", SYSTEMD_DIR="")
-	AC_SUBST(SYSTEMD_DIR)
+	AC_ARG_WITH(systemdsystemunitdir, [  --with-systemdsystemunitdir=DIR    set directory for systemd service files],
+		systemdsystemunitdir="$withval", systemdsystemunitdir="")
+	AC_SUBST(systemdsystemunitdir)
 
-	AC_ARG_WITH(systemdisinit, [  --with-systemd-modules-load          set directory for systemd modules load files],
-		SYSTEMD_MODULES_LOAD="$withval", SYSTEMD_MODULES_LOAD="")
-	AC_SUBST(SYSTEMD_MODULES_LOAD)
+	AC_ARG_WITH(modulesloaddir, [  --with-modulesloaddir=DIR                set directory for systemd modules load files],
+		modulesloaddir="$withval", modulesloaddir="")
+	AC_SUBST(modulesloaddir)
 ])
 
 AC_DEFUN([AX_ENABLE_SYSTEMD_SYSTEM_OPTS], [
@@ -43,7 +51,7 @@ AC_DEFUN([AX_ALLOW_SYSTEMD_SYSTEM_OPTS], [
 ])
 
 AC_DEFUN([AX_ENABLE_SYSTEMD_OPTS], [
-	AX_ARG_DEFAULT_ENABLE([systemd], [Disable systemd development support])
+	AX_ARG_DEFAULT_ENABLE([systemddev], [Disable systemd development support])
 ])
 
 AC_DEFUN([AX_ENABLE_SYSTEMD_INIT_OPTS], [
@@ -51,11 +59,11 @@ AC_DEFUN([AX_ENABLE_SYSTEMD_INIT_OPTS], [
 	AX_SYSTEMD_INIT_OPTIONS()
 ])
 
-AC_DEFUN([AX_ALLOW_SYSTEMD_OPTS], [
-	AX_ARG_DEFAULT_DISABLE([systemd], [Enable systemd development support])
+AC_DEFUN([AX_ALLOW_SYSTEMD_DEV], [
+	AX_ARG_DEFAULT_DISABLE([systemddev], [Enable systemd development support])
 ])
 
-AC_DEFUN([AX_ALLOW_SYSTEMD_INIT_OPTS], [
+AC_DEFUN([AX_ALLOW_SYSTEMD_INIT], [
 	AX_ARG_DEFAULT_DISABLE([systemdisinit], [Enable systemd init support])
 	AX_SYSTEMD_INIT_OPTIONS()
 ])
@@ -78,44 +86,44 @@ AC_DEFUN([AX_CHECK_SYSTEMD_LIBS], [
 ])
 
 AC_DEFUN([AX_CHECK_SYSTEMD_VARS], [
-	AS_IF([test "x$SYSTEMD_DIR" = x], [
-	    SYSTEMD_DIR='${prefix}/lib/systemd/system/'
-	    AC_SUBST(SYSTEMD_DIR)
+	AS_IF([test "x$systemduserunitdir" = x], [
+	    systemduserunitdir='${prefix}/lib/systemd/user'
+	    AC_SUBST(systemduserunitdir)
 	], [])
 
-	AS_IF([test "x$SYSTEMD_USER_DIR" = x], [
-	    SYSTEMD_USER_DIR='${prefix}/lib/systemd/user'
-	    AC_SUBST(SYSTEMD_USER_DIR)
+	AS_IF([test "x$systemduserunitdir" = x], [
+	    AC_MSG_ERROR([systemduserunitdir is unset])
 	], [])
 
-	AS_IF([test "x$SYSTEMD_DIR" = x], [
-	    AC_MSG_ERROR([SYSTEMD_DIR is unset])
+	AS_IF([test "x$systemdsystemunitdir" = x], [
+	    systemdsystemunitdir='${prefix}/lib/systemd/system/'
+	    AC_SUBST(systemdsystemunitdir)
 	], [])
 
-	AS_IF([test "x$SYSTEMD_USER_DIR" = x], [
-	    AC_MSG_ERROR([SYSTEMD_USER_DIR is unset])
+	AS_IF([test "x$systemdsystemunitdir" = x], [
+	    AC_MSG_ERROR([systemdsystemunitdir is unset])
 	], [])
 
-	dnl There is no variable for this yet for some reason
-	AS_IF([test "x$SYSTEMD_MODULES_LOAD" = x], [
-	    SYSTEMD_MODULES_LOAD='${prefix}/lib/modules-load.d/'
+	AS_IF([test "x$modulesloaddir" = x], [
+	    modulesloaddir='${prefix}/lib/modules-load.d/'
+	    AC_SUBST(modulesloaddir)
 	], [])
 
-	AS_IF([test "x$SYSTEMD_MODULES_LOAD" = x], [
-	    AC_MSG_ERROR([SYSTEMD_MODULES_LOAD is unset])
+	AS_IF([test "x$modulesloaddir" = x], [
+	    AC_MSG_ERROR([modulesloaddir is unset])
 	], [])
 ])
 
 
-AC_DEFUN([AX_CHECK_SYSTEMD], [
+AC_DEFUN([AX_CHECK_SYSTEMD_DEV], [
 	dnl Respect user override to disable
 	AS_IF([test "x$enable_systemd" != "xno"], [
-	     AS_IF([test "x$systemd" = "xy" ], [
+	     AS_IF([test "x$systemddev" = "xy" ], [
 		AC_DEFINE([HAVE_SYSTEMD], [1], [Systemd development libraries available and enabled])
-			systemd=y
+			systemddev=y
 			AX_CHECK_SYSTEMD_LIBS()
-	    ],[systemd=n])
-	],[systemd=n])
+	    ],[systemddev=n])
+	],[systemddev=n])
 ])
 
 AC_DEFUN([AX_CHECK_SYSTEMD_INIT], [
@@ -139,7 +147,7 @@ AC_DEFUN([AX_CHECK_SYSTEMD_INIT_ENABLE_AVAILABLE], [
 	      fi])
 ])
 
-AC_DEFUN([AX_CHECK_SYSTEMD_ENABLE_AVAILABLE], [
+AC_DEFUN([AX_CHECK_SYSTEMD_DEV_ENABLE_AVAILABLE], [
 	AC_CHECK_HEADER([systemd/sd-daemon.h], [
 	    AC_CHECK_LIB([systemd-daemon], [sd_listen_fds], [systemd="y"])
 	])
@@ -151,26 +159,43 @@ AC_DEFUN([AX_ENABLE_SYSTEMD], [
 	AX_ENABLE_SYSTEMD_INIT_OPTS()
 	AX_ENABLE_SYSTEMD_OPTS()
 	AX_CHECK_SYSTEMD_INIT()
-	AX_CHECK_SYSTEMD()
+	AX_CHECK_SYSTEMD_DEV()
 ])
 
 dnl Systemd will be disabled by default and requires you to run configure with
 dnl --enable-systemd to look for and enable systemd.
 AC_DEFUN([AX_ALLOW_SYSTEMD], [
-	AX_ALLOW_SYSTEMD_INIT_OPTS()
-	AX_ALLOW_SYSTEMD_OPTS()
+	AX_ALLOW_SYSTEMD_INIT()
+	AX_ALLOW_SYSTEMD_DEV()
 	AX_CHECK_SYSTEMD_INIT()
-	AX_CHECK_SYSTEMD()
+	AX_CHECK_SYSTEMD_DEV()
 ])
 
 dnl Systemd will be disabled by default but if your build system is detected
-dnl to have systemd build libraries it will be enabled. You can always force
-dnl disable with --disable-systemd
+dnl to have systemd build libraries it will be enabled. Note that this
+dnl does not allow you to disable with --disable-systemd, for that use
+dnl AX_ENABLE_SYSTEMD() instead.
 AC_DEFUN([AX_AVAILABLE_SYSTEMD], [
-	AX_ALLOW_SYSTEMD_INIT_OPTS()
-	AX_ALLOW_SYSTEMD_OPTS()
+	dnl allows you to force enable systemd-as-init through command line
+	AX_ALLOW_SYSTEMD_INIT()
+
+	dnl checks if you have systemd as init and enables it if available
 	AX_CHECK_SYSTEMD_INIT_ENABLE_AVAILABLE()
-	AX_CHECK_SYSTEMD_ENABLE_AVAILABLE()
+
+	dnl checks to make sure init environment variables make sense.
+	dnl If you enabled systemd but there are no variables for the paths
+	dnl defined, we'll set them.
 	AX_CHECK_SYSTEMD_INIT()
-	AX_CHECK_SYSTEMD()
+
+
+	dnl allows you to force enable systemd dev environment
+	AX_ALLOW_SYSTEMD_DEV()
+
+	dnl checks if you have systemd dev environment and enables it if available
+	AX_CHECK_SYSTEMD_DEV_ENABLE_AVAILABLE()
+
+	dnl checks to make sure development environment variables make sense.
+	dnl If you *did* enable systemd development environment a final check
+	dnl is done to ensure you have the proper dev environment present.
+	AX_CHECK_SYSTEMD_DEV()
 ])

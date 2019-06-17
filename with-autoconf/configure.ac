@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([Funk Systemd Sample Daemon],  [v1.0],
-	[mcgrof@do-not-panic.com],
+AC_INIT([Funk Systemd Sample Daemon],  [v1.1],
+	[mcgrof@kernel.org],
 	[funk],
 	[http://github.com/mcgrof/funkd/])
 AC_CONFIG_SRCDIR([funk_dynamic.c])

@@ -6,6 +6,10 @@ types of implementations supported and with m4 autoconf library helpers for
 systemd, and with an example build environemnt provided with just autoconf,
 and then also with automake.
 
+It also supports user unit systemd unit service files, and demos how to use
+these variables for software which may not *need* to use systemd development
+libraries but *does* make use of systemd unit files.
+
 The purpose of this example set is to help you get ramped up with systemd with
 the different types of build environment requirements you may have, and provide
 an m4 library to help you integrate support for systemd autoconf. This example

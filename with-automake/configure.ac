@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([Funk Systemd Sample Daemon],  [v1.0],
-	[mcgrof@do-not-panic.com],
+AC_INIT([Funk Systemd Sample Daemon],  [v1.1],
+	[mcgrof@kernel.org],
 	[funk],
 	[http://github.com/mcgrof/funkd/])
 AC_CONFIG_SRCDIR([funk_dynamic.c])
@@ -48,5 +48,5 @@ m4_include([m4/paths.m4])
 AX_LOCAL_EXPAND_CONFIG()
 AX_AVAILABLE_SYSTEMD()
 AM_CONDITIONAL(CONFIG_SYSTEMD_INIT, [test x"$systemdisinit" = xy])
-AM_CONDITIONAL(CONFIG_SYSTEMD, [test x"$systemd" = xy])
+AM_CONDITIONAL(CONFIG_SYSTEMD_DEV, [test x"$systemddev" = xy])
 AC_OUTPUT
